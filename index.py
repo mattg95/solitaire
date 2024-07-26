@@ -38,7 +38,12 @@ class Solitaire():
         for card in self.piles[pile_index]:
             if card.visible:
                 return  card
+        return None
     
+    def __find_first_visible_card_index(self,pile_index):
+        for index, card in enumerate(self.piles[pile_index]):
+            if card.visible:
+                return index
 
         
     def __get_all_cards(self):
@@ -64,12 +69,12 @@ class Solitaire():
             self.piles.append(pile)
 
     def __get_elements_after_visible(self,pile_index):
-        card = self.__find_first_visible_card(pile_index)
-        cardIndex = self.piles[pile_index].index(card)
+        card_index = self.__find_first_visible_card_index(pile_index)
+        print("rest of cards", self.piles[pile_index][card_index:])
 
-        if cardIndex == -1:
+        if card_index == -1:
             return []  # No visible cards found
-        return self.piles[pile_index][cardIndex + 1:] 
+        return self.piles[pile_index][card_index:] 
         
     
 
@@ -83,11 +88,13 @@ class Solitaire():
         cards_to_move = self.__get_elements_after_visible(current_pile_index)
 
         if self.__is_valid_move(first_card, second_card):
-            del self.piles[current_pile_index][first_card_index:-1]
-            self.piles[next_pile_index].append(cards_to_move)
-            print("Moved:")
+            del self.piles[current_pile_index][first_card_index:]
+            self.piles[current_pile_index][first_card_index -1].visible = True
+            self.piles[next_pile_index].extend(cards_to_move)
+            print("Moved: ", cards_to_move, " TO ", self.piles[next_pile_index])
             self.__display_card(first_card)
             self.__display_card(second_card)
+            self.save_state()
 
         else:
             self.__display_card(first_card)
@@ -96,7 +103,7 @@ class Solitaire():
 
 
     def __is_black_suit(self, card):
-        return card.suit == 'Clubs' or card.suit == 'SPADES'
+        return card.suit == 'Clubs' or card.suit == 'Spades'
 
     def __is_opposite_colour(self, card_1, card_2):
         red_and_black = self.__is_black_suit(card_1) and not self.__is_black_suit(card_2)
@@ -106,11 +113,12 @@ class Solitaire():
     
     def __is_one_smaller_value(self, card_1, card_2):
         card_1_value_index = CARD_VALUES.index(card_1.value)
-        card_1_value_index = CARD_VALUES.index(card_2.value)
+        card_2_value_index = CARD_VALUES.index(card_2.value)
 
-        return card_1_value_index == card_1_value_index + 1
+        return card_1_value_index + 1 == card_2_value_index 
     
     def __is_valid_move(self, card_1, card_2):
+
         return self.__is_opposite_colour(card_1, card_2) and  self.__is_one_smaller_value(card_1, card_2)
 
 
