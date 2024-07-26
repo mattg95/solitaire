@@ -1,11 +1,11 @@
 import random
 import argparse
+import pickle
+import os
+
 
 CARD_VALUES = ["A", "2", "3", "4", "5", "6", "7", "8", "9", "10", "J", "Q", "K"]
 CARD_SUITS = ["Clubs", "Hearts", "Spades", "Diamonds"]
-
-
- 
 
 class Card():
     def __init__(self, suit, value, visible):
@@ -16,9 +16,6 @@ class Card():
 
     def __repr__(self):
         return f"{self.value} of {self.suit}, {self.visible}"
-
-
-
 class Solitaire():
     def __init__(self):
         super().__init__
@@ -34,19 +31,15 @@ class Solitaire():
 
         self.__setup_piles()
 
+        self.save_state()
+
 
     def __find_first_visible_card(self,pile_index):
         for card in self.piles[pile_index]:
-            print(card)
             if card.visible:
                 return  card
     
-    def __determine_visible(self,index, max):
 
-        if index == max:
-            return True
-        else:
-            return False
         
     def __get_all_cards(self):
         for card_suit in CARD_SUITS:
@@ -59,12 +52,15 @@ class Solitaire():
             pile = []
             max = pile_index + 1
 
-            for card_index in range(0, max):
+            for _ in range(0, max):
                 random_card = random.choice(self.card_deck)
-                random_card.visible = self.__determine_visible(card_index, max -1)
+                self.card_deck.remove(random_card)
+                random_card.visible = False
 
                 pile.append(random_card)
-                
+            
+            pile[max-1].visible = True
+
             self.piles.append(pile)
 
     def __get_elements_after_visible(self,pile_index):
@@ -78,23 +74,25 @@ class Solitaire():
     
 
     def move_cards(self, current_pile_index, next_pile_index):
-        # print(current_pile_index, next_pile_index)
         
         first_card = self.__find_first_visible_card(current_pile_index)
-        print(first_card)
         first_card_index = self.piles[current_pile_index].index(first_card)
 
         second_card = self.piles[next_pile_index][-1]
 
         cards_to_move = self.__get_elements_after_visible(current_pile_index)
 
-        # print(first_card, second_card)
-
         if self.__is_valid_move(first_card, second_card):
             del self.piles[current_pile_index][first_card_index:-1]
             self.piles[next_pile_index].append(cards_to_move)
+            print("Moved:")
+            self.__display_card(first_card)
+            self.__display_card(second_card)
+
         else:
-            print('Invalid move')
+            self.__display_card(first_card)
+            self.__display_card(second_card)
+            print("Invalid move")
 
 
     def __is_black_suit(self, card):
@@ -116,31 +114,60 @@ class Solitaire():
         return self.__is_opposite_colour(card_1, card_2) and  self.__is_one_smaller_value(card_1, card_2)
 
 
-    def display(self):
-        for card in self.piles:
-            print(card)
+    def __format_card(self, card):
+        return card.value + " of " + card.suit
+
+    def __display_card(self, card):
+            print(card.value, card.suit)
+
+    def save_state(self):
+        with open('solitaire_state.pkl', 'wb') as f:
+            pickle.dump(self.piles, f)
+        print("Game state saved.")
+
+    def load_state(self):
+        if os.path.exists('solitaire_state.pkl'):
+            with open('solitaire_state.pkl', 'rb') as f:
+                self.piles = pickle.load(f)
+            print("Game state loaded.")
+        else:
+            print("No saved game state found. Please run 'setup_game' first.")
+
+
+    def display_all_cards(self):
+        for pile in self.piles:
+            display_pile = []
+            for card in pile:
+                if(card.visible):
+                   display_pile.append(self.__format_card(card)),
+                else:
+                    display_pile.append("hidden")
+            print(display_pile)
 
 def main():
     parser = argparse.ArgumentParser(description="The index of the stack to take from, followed by the index of the stack to move to.")
-    parser.add_argument('operation', choices=['move_cards', 'see_cards'], help="The operation to perform.")
+    parser.add_argument('operation', choices=['deal','move_cards', 'see_cards'], help="The operation to perform.")
     parser.add_argument('num1',nargs='?', type=int, help="The first stack.")
     parser.add_argument('num2',nargs='?', type=int, help="The second stack.")
     
     args = parser.parse_args()
 
-    game = Solitaire()
-    
-    game.setup()
-
+    if args.operation == 'deal':
+        game.setup()
+        game.display_all_cards()
     if args.operation == 'see_cards':
-        game.display()
+        game.load_state()
+        game.display_all_cards()
     elif args.operation == 'move_cards':
+        game.load_state()
         game.move_cards(args.num1, args.num2)
-        game.display()
 
    
-main()
+game = Solitaire()
 
+# Call the main function to handle commands
+if __name__ == "__main__":
+    main()
 
 
         
