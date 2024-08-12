@@ -4,21 +4,27 @@ import pickle
 import os
 
 
-CARD_VALUES = ["A", "2", "3", "4", "5", "6", "7", "8", "9", "10", "J", "Q", "K"]
+CARD_RANKS = ["A", "2", "3", "4", "5", "6", "7", "8", "9", "10", "J", "Q", "K"]
 CARD_SUITS = ["Clubs", "Hearts", "Spades", "Diamonds"]
+
+type Pile = list[list[Card]]
+
 class Card():
-    def __init__(self, suit, value, visible):
+    def __init__(self, suit, rank):
         self.suit = suit
-        self.value = value
-        self.visible = visible
+        self.rank = rank
+        self.visible = None
         super().__init__
 
-    def __repr__(self):
-        return f"{self.value} of {self.suit}, {self.visible}"
+    def get_value(self):
+        return CARD_RANKS.index(self.rank)
+
+    def display(self):
+        return (self.rank + " of " + self.suit)
     
 class Piles():
     def __init__(self, card_deck):
-        self.piles: list[list[Card]]  = []
+        self.piles: Pile = []
         self.__setup_piles(card_deck)     
         super().__init__
 
@@ -47,18 +53,18 @@ class CardDeck():
 
     def __get_all_cards(self):
         for card_suit in CARD_SUITS:
-            for card_value in CARD_VALUES:
-                card = Card(card_suit, card_value, None)
+            for card_rank in CARD_RANKS:
+                card = Card(card_suit, card_rank)
                 self.card_deck.append(card)
 
 class Foundations():
     def __init__(self):
-        self.foundations: list[list[Card]] = [[],[],[],[]]
+        self.foundations: Pile = [[],[],[],[]]
         super().__init__
 
     def move_card(self, foundations, piles, pile_index: int, foundation_index: int):
         card = piles[pile_index][-1]
-        is_same_suit = CARD_SUITS.index(card.suit) == foundation_index\
+        is_same_suit = CARD_SUITS.index(card.suit) == foundation_index
         
 
         def excecute_swap():
@@ -68,13 +74,11 @@ class Foundations():
             return True
 
 
-        if not foundations[foundation_index] and card.value == 'A' and is_same_suit:
+        if not foundations[foundation_index] and card.rank == 'A' and is_same_suit:
             return excecute_swap()
         else:
             last_card_in_foundation = foundations[foundation_index][-1]
-            last_card_in_foundation_value = CARD_VALUES.index(last_card_in_foundation.value)
-            card_value = CARD_VALUES.index(card.value)
-            is_one_less = last_card_in_foundation_value == card_value - 1
+            is_one_less = last_card_in_foundation.getValue() == card.getValue() - 1
 
             if  is_one_less and is_same_suit:
                 return excecute_swap()
@@ -98,7 +102,7 @@ class Solitaire():
 
         self.save_state()
 
-    def check_game_win(self):
+    def __check_game_win(self):
         if all(not foundation for (foundation) in self.foundations):
             print("GAME WON!!!")
 
@@ -141,7 +145,7 @@ class Solitaire():
             print("Moved: ", cards_to_move, " TO ", self.piles[next_pile_index])
             self.__display_card(first_card)
             self.__display_card(second_card)
-            self.check_game_win()
+            self.__check_game_win()
             self.save_state()
 
         else:
@@ -159,22 +163,17 @@ class Solitaire():
 
         return red_and_black or back_and_red
     
-    def __is_one_smaller_value(self, card_1, card_2):
-        card_1_value_index = CARD_VALUES.index(card_1.value)
-        card_2_value_index = CARD_VALUES.index(card_2.value)
-
-        return card_1_value_index + 1 == card_2_value_index 
+    def __is_one_smaller_value(self, card_1: Card, card_2:Card):
+        return card_1.get_value() + 1 == card_2.get_value() 
     
     def __is_valid_move(self, card_1, card_2):
-
         return self.__is_opposite_colour(card_1, card_2) and  self.__is_one_smaller_value(card_1, card_2)
 
 
-    def __format_card(self, card):
-        return (card.value + " of " + card.suit)
+
 
     def __display_card(self, card):
-            print(card.value, card.suit)
+            print(card.rank, card.suit)
 
     def save_state(self):
         with open('solitaire_state.pkl', 'wb') as f:
@@ -194,7 +193,7 @@ class Solitaire():
     def display_all_cards(self):
         for index, foundation in enumerate(self.foundations):
             if foundation:
-                print('[' + self.__format_card(foundation[-1]) + ']')
+                print('[' + foundation[-1].display() + ']')
             else: print('[] ' + CARD_SUITS[index])
         print('')
 
@@ -203,7 +202,7 @@ class Solitaire():
             display_pile = []
             for card in pile:
                 if(card.visible):
-                   display_pile.append(self.__format_card(card)),
+                   display_pile.append(card.display()),
                 else:
                     display_pile.append('hidden')
             print(display_pile)
@@ -213,7 +212,7 @@ class Solitaire():
         success = Foundations().move_card(self.foundations, self.piles, pile_index, foundation_index)
         if success:
             self.display_all_cards()
-            self.check_game_win()
+            self.__check_game_win()
             self.save_state()
         
     
