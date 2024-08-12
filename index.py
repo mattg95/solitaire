@@ -96,6 +96,10 @@ class Solitaire():
 
         self.save_state()
 
+    def check_game_win(self):
+        if all(not foundation for (_,_, foundation) in self.foundations):
+            print("GAME WON!!!")
+
 
     def __find_first_visible_card(self,pile_index):
         for card in self.piles[pile_index]:
@@ -136,6 +140,7 @@ class Solitaire():
             print("Moved: ", cards_to_move, " TO ", self.piles[next_pile_index])
             self.__display_card(first_card)
             self.__display_card(second_card)
+            self.check_game_win()
             self.save_state()
 
         else:
@@ -207,6 +212,7 @@ class Solitaire():
         success = Foundations().move_card(self.foundations, self.piles, pile_index, foundation_index)
         if success:
             self.display_all_cards()
+            self.check_game_win()
             self.save_state()
         
     
