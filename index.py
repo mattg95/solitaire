@@ -58,7 +58,8 @@ class Foundations():
 
     def move_card(self, foundations, piles, pile_index: int, foundation_index: int):
         card = piles[pile_index][-1]
-        is_same_suit = CARD_SUITS.index(card.suit) == foundation_index
+        is_same_suit = CARD_SUITS.index(card.suit) == foundation_index\
+        
 
         def excecute_swap():
             foundations[foundation_index].append(card)
@@ -71,8 +72,9 @@ class Foundations():
             return excecute_swap()
         else:
             last_card_in_foundation = foundations[foundation_index][-1]
-            card_value = CARD_VALUES.index(last_card_in_foundation.value)
-            is_one_less = card.value == card_value - 1
+            last_card_in_foundation_value = CARD_VALUES.index(last_card_in_foundation.value)
+            card_value = CARD_VALUES.index(card.value)
+            is_one_less = last_card_in_foundation_value == card_value - 1
 
             if  is_one_less and is_same_suit:
                 return excecute_swap()
@@ -97,7 +99,7 @@ class Solitaire():
         self.save_state()
 
     def check_game_win(self):
-        if all(not foundation for (_,_, foundation) in self.foundations):
+        if all(not foundation for (foundation) in self.foundations):
             print("GAME WON!!!")
 
 
@@ -116,7 +118,6 @@ class Solitaire():
 
     def __get_elements_after_visible(self,pile_index):
         card_index = self.__find_first_visible_card_index(pile_index)
-        print("rest of cards", self.piles[pile_index][card_index:])
 
         if card_index == -1:
             return []  # No visible cards found
