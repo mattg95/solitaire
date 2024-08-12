@@ -194,7 +194,7 @@ class Solitaire():
         for index, foundation in enumerate(self.foundations):
             if foundation:
                 print('[' + self.__format_card(foundation[-1]) + ']')
-            else: print('[' + CARD_SUITS[index] + ']')
+            else: print('[] ' + CARD_SUITS[index])
         print('')
 
 
