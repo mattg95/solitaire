@@ -138,7 +138,7 @@ class Solitaire():
 
         cards_to_move = self.__get_elements_after_visible(current_pile_index)
 
-        if self.__is_valid_move(first_card, second_card):
+        if self.__is_valid_move(first_card, second_card) or self.__is_moving_to_empty_foundation(first_card, second_card):
             del self.piles[current_pile_index][first_card_index:]
             self.piles[current_pile_index][first_card_index -1].visible = True
             self.piles[next_pile_index].extend(cards_to_move)
@@ -169,6 +169,8 @@ class Solitaire():
     def __is_valid_move(self, card_1, card_2):
         return self.__is_opposite_colour(card_1, card_2) and  self.__is_one_smaller_value(card_1, card_2)
 
+    def __is_moving_to_empty_foundation(self, card_1: Card, foundation):
+        return foundation == None and card_1.rank == 'A'
 
 
 
