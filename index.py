@@ -2,10 +2,9 @@ import random
 import argparse
 import pickle
 import os
+import arcade
 
-
-CARD_RANKS = ["A", "2", "3", "4", "5", "6", "7", "8", "9", "10", "J", "Q", "K"]
-CARD_SUITS = ["Clubs", "Hearts", "Spades", "Diamonds"]
+from config import BOTTOM_Y, CARD_RANKS, CARD_SUITS, SCREEN_HEIGHT, SCREEN_TITLE, SCREEN_WIDTH, START_X
 
 type Pile = list[list[Card]]
 
@@ -14,7 +13,9 @@ class Card():
         self.suit = suit
         self.rank = rank
         self.visible = None
-        super().__init__
+        self.image = f"./assets/{self.rank}_of_{self.suit.lower()}.png"
+        print(self.image)
+        super().__init__()
 
     def get_value(self):
         return CARD_RANKS.index(self.rank)
@@ -55,6 +56,7 @@ class CardDeck():
         for card_suit in CARD_SUITS:
             for card_rank in CARD_RANKS:
                 card = Card(card_suit, card_rank)
+                card.position = START_X, BOTTOM_Y
                 self.card_deck.append(card)
 
 class Foundations():
@@ -87,20 +89,33 @@ class Foundations():
                 print('invalid move')
 
 
-class Solitaire():
+class Solitaire(arcade.Window):
     def __init__(self):
-        super().__init__
+        super().__init__(SCREEN_WIDTH, SCREEN_HEIGHT, SCREEN_TITLE)
+        arcade.set_background_color(arcade.color.AMAZON)
         self.card_deck = None
         self.piles = None
         self.foundations = None
 
     def setup(self):
 
+        self.clear()
         self.card_deck = CardDeck().card_deck
         self.piles = Piles(self.card_deck).piles
         self.foundations = Foundations().foundations
+        self.card_list = arcade.SpriteList()
+        print(self.card_list)
+
 
         self.save_state()
+
+    def on_draw(self):
+        """ Render the screen. """
+        # Clear the screen
+        self.clear()
+
+        # Draw the cards
+        self.card_list.draw()
 
     def __check_game_win(self):
         if all(not foundation for (foundation) in self.foundations):
@@ -239,6 +254,8 @@ def main():
     if args.operation == 'move_to_foundation':
         game.load_state()
         game.move_to_foundation(args.num1, args.num2)
+
+    arcade.run()
 
    
 game = Solitaire()
